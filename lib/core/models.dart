@@ -1,22 +1,23 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum CyclePhase { menstrual, follicular, ovulatory, luteal }
 
 class DailyLog {
   final DateTime date;
-  final String mood;
+  final String flowIntensity; // Light, Medium, Heavy, None
+  final String mood; // Emoji string
   final List<String> symptoms;
   final int energyLevel; // 1 to 5
   final String notes;
-  final String? flowIntensity; // Optional
 
   DailyLog({
     required this.date,
+    required this.flowIntensity,
     required this.mood,
     required this.symptoms,
     required this.energyLevel,
-    required this.notes,
-    this.flowIntensity,
+    this.notes = '',
   });
 }
 
@@ -37,6 +38,77 @@ class Doctor {
 }
 
 class AppState extends ChangeNotifier {
+  bool _isInitialized = false;
+  bool _isLoggedIn = false;
+
+  bool get isInitialized => _isInitialized;
+  bool get isLoggedIn => _isLoggedIn;
+
+  // Mock User Info
+  String _userName = 'Eleanor';
+  String _userEmail = 'eleanor@example.com';
+  
+  String get userName => _userName;
+  String get userEmail => _userEmail;
+
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    
+    if (_isLoggedIn) {
+      _userName = prefs.getString('userName') ?? 'Eleanor';
+      _userEmail = prefs.getString('userEmail') ?? 'eleanor@example.com';
+      _cycleLength = prefs.getInt('cycleLength') ?? 28;
+      _periodLength = prefs.getInt('periodLength') ?? 5;
+    }
+    
+    _isInitialized = true;
+    notifyListeners();
+  }
+
+  Future<void> register(String name, String email, String password) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 2));
+    
+    _userName = name;
+    _userEmail = email;
+    _isLoggedIn = true;
+    
+    // Clear all existing mock data on registration to give a clean slate
+    _logs.clear();
+    _cycleLength = 28;
+    _periodLength = 5;
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('userName', name);
+    await prefs.setString('userEmail', email);
+    await prefs.setInt('cycleLength', 28);
+    await prefs.setInt('periodLength', 5);
+    
+    notifyListeners();
+  }
+
+  Future<void> login(String email, String password) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 2));
+    
+    _isLoggedIn = true;
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
+    await prefs.setString('userName', _userName);
+    
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
+    _isLoggedIn = false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('isLoggedIn');
+    notifyListeners();
+  }
+
   // Mock Data
   final List<DailyLog> _logs = [
     DailyLog(
@@ -62,13 +134,6 @@ class AppState extends ChangeNotifier {
     Doctor(id: '2', name: 'Dr. Emily Chen', specialty: 'Primary Care', email: 'emily@example.com', phone: '555-0200'),
   ];
   
-  // Mock User Info
-  final String _userName = 'Eleanor';
-  final String _userEmail = 'eleanor@example.com';
-  
-  String get userName => _userName;
-  String get userEmail => _userEmail;
-
   // Settings
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = true;
@@ -96,13 +161,17 @@ class AppState extends ChangeNotifier {
   int get cycleLength => _cycleLength;
   int get periodLength => _periodLength;
 
-  void updateCycleLength(int length) {
+  void updateCycleLength(int length) async {
     _cycleLength = length;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('cycleLength', length);
     notifyListeners();
   }
 
-  void updatePeriodLength(int length) {
+  void updatePeriodLength(int length) async {
     _periodLength = length;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('periodLength', length);
     notifyListeners();
   }
 

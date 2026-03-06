@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../core/models.dart';
 import '../export/export_config.dart';
+import '../onboarding/onboarding_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -150,7 +151,15 @@ class SettingsScreen extends StatelessWidget {
                   icon: Icons.logout,
                   title: 'Log Out',
                   titleColor: Colors.white,
-                  onTap: () => _showComingSoon(context, "Log Out"),
+                  onTap: () async {
+                    await context.read<AppState>().logout();
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+                          (route) => false);
+                    }
+                  },
                 ),
                 _buildDivider(),
                 _buildActionTile(

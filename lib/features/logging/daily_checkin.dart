@@ -31,7 +31,7 @@ class _DailyCheckinState extends State<DailyCheckin> {
           _selectedSymptoms = Set.from(log.symptoms);
           _energyLevel = log.energyLevel.toDouble();
           _notesController.text = log.notes;
-          _flowIntensity = log.flowIntensity ?? 'Medium';
+          _flowIntensity = log.flowIntensity;
         });
       }
     });
