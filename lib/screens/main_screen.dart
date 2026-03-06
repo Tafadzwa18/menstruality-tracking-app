@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../features/home/home_dashboard.dart';
-import '../features/insights/trends_overview.dart';
+import '../features/insights/trends_overview.dart'; // Keep this import as TrendsOverview is still used
 import '../features/doctors/doctor_list.dart';
+import '../features/profile/profile_screen.dart'; // Add this import
 import '../features/logging/daily_checkin.dart';
 import '../core/theme.dart';
 
@@ -15,11 +16,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
+  final List<Widget> _pages = [ // Renamed to _pages from _screens in the instruction, but keeping original name for consistency with existing code structure
     const HomeDashboard(),
     const TrendsOverview(),
     const DoctorList(),
-    const Center(child: Text("Profile", style: TextStyle(color: Colors.white))),
+    const ProfileScreen(), // Replaced the placeholder with ProfileScreen
   ];
 
   @override

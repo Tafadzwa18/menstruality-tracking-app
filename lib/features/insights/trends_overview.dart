@@ -20,8 +20,14 @@ class TrendsOverview extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Trends & Insights', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text('Trends & Insights', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_today_outlined, size: 22),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calendar coming soon!')));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.ios_share, size: 22),
             onPressed: () {

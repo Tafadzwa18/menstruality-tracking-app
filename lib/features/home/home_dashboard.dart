@@ -37,7 +37,7 @@ class HomeDashboard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(appState),
+              _buildHeader(context, appState),
               const SizedBox(height: 32),
               _buildFlowIntensity(todayLog),
               const SizedBox(height: 24),
@@ -56,13 +56,18 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(AppState appState) {
+  Widget _buildHeader(BuildContext context, AppState appState) {
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.menu, color: Colors.white, size: 28),
+            IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menu coming soon!')));
+              },
+            ),
             Column(
               children: [
                 Text(
@@ -84,7 +89,12 @@ class HomeDashboard extends StatelessWidget {
                 ),
               ],
             ),
-            const Icon(Icons.calendar_today_outlined, color: Colors.white, size: 26),
+            IconButton(
+              icon: const Icon(Icons.calendar_today_outlined, color: Colors.white, size: 26),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calendar coming soon!')));
+              },
+            ),
           ],
         ),
       ],
@@ -374,9 +384,10 @@ class HomeDashboard extends StatelessWidget {
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           ClipRRect(
             borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), bottomLeft: Radius.circular(24)),
             child: Container(
@@ -411,6 +422,7 @@ class HomeDashboard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

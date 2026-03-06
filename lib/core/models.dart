@@ -62,10 +62,50 @@ class AppState extends ChangeNotifier {
     Doctor(id: '2', name: 'Dr. Emily Chen', specialty: 'Primary Care', email: 'emily@example.com', phone: '555-0200'),
   ];
   
+  // Mock User Info
+  final String _userName = 'Eleanor';
+  final String _userEmail = 'eleanor@example.com';
+  
+  String get userName => _userName;
+  String get userEmail => _userEmail;
+
+  // Settings
+  bool _notificationsEnabled = true;
+  bool _darkModeEnabled = true;
+
+  bool get notificationsEnabled => _notificationsEnabled;
+  bool get darkModeEnabled => _darkModeEnabled;
+
+  void toggleNotifications(bool value) {
+    _notificationsEnabled = value;
+    notifyListeners();
+  }
+
+  void toggleDarkMode(bool value) {
+    _darkModeEnabled = value;
+    notifyListeners();
+  }
+
   List<DailyLog> get logs => List.unmodifiable(_logs);
   List<Doctor> get doctors => List.unmodifiable(_doctors);
 
   // Cycle tracking
+  int _cycleLength = 28;
+  int _periodLength = 5;
+
+  int get cycleLength => _cycleLength;
+  int get periodLength => _periodLength;
+
+  void updateCycleLength(int length) {
+    _cycleLength = length;
+    notifyListeners();
+  }
+
+  void updatePeriodLength(int length) {
+    _periodLength = length;
+    notifyListeners();
+  }
+
   DateTime _cycleStartDate = DateTime.now().subtract(const Duration(days: 13)); // Default to day 14 for demo purposes
 
   DateTime get cycleStartDate => _cycleStartDate;
@@ -78,15 +118,18 @@ class AppState extends ChangeNotifier {
   int get currentCycleDay {
     final now = DateTime.now();
     final difference = now.difference(_cycleStartDate).inDays;
-    // Assuming a standard 28 day cycle for simplicity
-    return (difference % 28) + 1;
+    return (difference % _cycleLength) + 1;
   }
 
   CyclePhase get currentPhase {
     final day = currentCycleDay;
-    if (day >= 1 && day <= 5) return CyclePhase.menstrual;
-    if (day >= 6 && day <= 13) return CyclePhase.follicular;
-    if (day >= 14 && day <= 15) return CyclePhase.ovulatory;
+    if (day >= 1 && day <= _periodLength) return CyclePhase.menstrual;
+    
+    // Approximate phases based on dynamic cycle length
+    final ovulationDay = _cycleLength - 14; 
+    
+    if (day > _periodLength && day < ovulationDay - 1) return CyclePhase.follicular;
+    if (day >= ovulationDay - 1 && day <= ovulationDay + 1) return CyclePhase.ovulatory;
     return CyclePhase.luteal;
   }
 

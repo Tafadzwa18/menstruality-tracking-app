@@ -29,7 +29,9 @@ class _SymptomTrendsState extends State<SymptomTrends> {
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_today_outlined, size: 22),
-            onPressed: () {},
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calendar coming soon!')));
+            },
           ),
           const SizedBox(width: 8),
         ],
