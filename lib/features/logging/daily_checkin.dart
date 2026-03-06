@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme.dart';
+import '../../core/models.dart';
 
 class DailyCheckin extends StatefulWidget {
   const DailyCheckin({Key? key}) : super(key: key);
@@ -10,8 +12,50 @@ class DailyCheckin extends StatefulWidget {
 
 class _DailyCheckinState extends State<DailyCheckin> {
   String _selectedMood = 'Calm';
-  final Set<String> _selectedSymptoms = {'Bloating'};
+  Set<String> _selectedSymptoms = {};
   double _energyLevel = 3;
+  String _flowIntensity = 'Medium';
+  late TextEditingController _notesController;
+
+  @override
+  void initState() {
+    super.initState();
+    _notesController = TextEditingController();
+    
+    // Pre-fill if log exists for today
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final log = context.read<AppState>().todayLog;
+      if (log != null) {
+        setState(() {
+          _selectedMood = log.mood;
+          _selectedSymptoms = Set.from(log.symptoms);
+          _energyLevel = log.energyLevel.toDouble();
+          _notesController.text = log.notes;
+          _flowIntensity = log.flowIntensity ?? 'Medium';
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _saveLog() {
+    final newLog = DailyLog(
+      date: DateTime.now(),
+      mood: _selectedMood,
+      symptoms: _selectedSymptoms.toList(),
+      energyLevel: _energyLevel.toInt(),
+      notes: _notesController.text,
+      flowIntensity: _flowIntensity,
+    );
+    context.read<AppState>().addLog(newLog);
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Log Saved!')));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,29 +65,12 @@ class _DailyCheckinState extends State<DailyCheckin> {
         leading: IconButton(
           icon: Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.cardColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: const BoxDecoration(color: AppTheme.cardColor, shape: BoxShape.circle),
             child: const Icon(Icons.close, size: 20),
           ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Daily Check-in', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.cardColor,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.calendar_today_outlined, size: 20),
-            ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -51,6 +78,10 @@ class _DailyCheckinState extends State<DailyCheckin> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDateStrip(),
+            const SizedBox(height: 32),
+            _buildSectionTitle('Flow Intensity'),
+            const SizedBox(height: 16),
+            _buildFlowSelection(),
             const SizedBox(height: 32),
             _buildSectionTitle('How are you feeling?'),
             const SizedBox(height: 16),
@@ -66,7 +97,7 @@ class _DailyCheckinState extends State<DailyCheckin> {
                 _buildSectionTitle('Energy Level'),
                 Text(
                   _energyLevel > 3 ? 'High' : (_energyLevel < 3 ? 'Low' : 'Moderate'),
-                  style: TextStyle(color: AppTheme.primaryPink, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: AppTheme.primaryPink, fontWeight: FontWeight.bold),
                 )
               ],
             ),
@@ -80,7 +111,7 @@ class _DailyCheckinState extends State<DailyCheckin> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _saveLog,
                 icon: const Icon(Icons.check_circle),
                 label: const Text('Save Log'),
               ),
@@ -92,11 +123,14 @@ class _DailyCheckinState extends State<DailyCheckin> {
   }
 
   Widget _buildDateStrip() {
-    final days = ['MON\n12', 'TUE\n13', 'WED\n14', 'THU\n15', 'FRI\n16', 'SAT\n17'];
+    final now = DateTime.now();
+    final days = List.generate(6, (i) => now.subtract(Duration(days: 5 - i)));
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: days.map((dayText) {
-        bool isSelected = dayText.contains('15');
+      children: days.map((date) {
+        bool isSelected = date.day == now.day;
+        final weekDay = _getWeekdayAbbr(date.weekday);
         return Column(
           children: [
             if (isSelected)
@@ -106,40 +140,22 @@ class _DailyCheckinState extends State<DailyCheckin> {
                 decoration: BoxDecoration(
                   color: AppTheme.primaryPink,
                   borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryPink.withOpacity(0.4),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    )
-                  ],
+                  boxShadow: [BoxShadow(color: AppTheme.primaryPink.withValues(alpha: 0.4), blurRadius: 15, spreadRadius: 2)],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      dayText.split('\n')[0],
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      dayText.split('\n')[1],
-                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
+                    Text(weekDay, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Text('${date.day}', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                   ],
                 ),
               )
             else
               Column(
                 children: [
-                  Text(
-                    dayText.split('\n')[0],
-                    style: TextStyle(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
+                  Text(weekDay, style: const TextStyle(color: AppTheme.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(
-                    dayText.split('\n')[1],
-                    style: TextStyle(color: AppTheme.textLight, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  Text('${date.day}', style: const TextStyle(color: AppTheme.textLight, fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               )
           ],
@@ -148,47 +164,89 @@ class _DailyCheckinState extends State<DailyCheckin> {
     );
   }
 
+  String _getWeekdayAbbr(int weekday) {
+    const abbrs = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    return abbrs[weekday - 1];
+  }
+
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+    return Text(title, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold));
+  }
+
+  Widget _buildFlowSelection() {
+    return Row(
+      children: ['None', 'Light', 'Medium', 'Heavy'].map((flow) {
+        bool isSelected = _flowIntensity == flow;
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _flowIntensity = flow),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: isSelected ? AppTheme.primaryPink : AppTheme.cardColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Center(
+                child: Text(
+                  flow,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : AppTheme.textMuted,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
   Widget _buildMoodRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildMoodItem('Happy', '😊', false),
-        _buildMoodItem('Calm', '😌', true),
-        _buildMoodItem('Tired', '😴', false),
-        _buildMoodItem('Sad', '😔', false),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildMoodItem('Happy', '😊'),
+          _buildMoodItem('Calm', '😌'),
+          _buildMoodItem('Tired', '😴'),
+          _buildMoodItem('Sad', '😔'),
+          _buildMoodItem('Anxious', '😰'),
+          _buildMoodItem('Productive', '🤓'),
+          _buildMoodItem('Sensitive', '🥺'),
+          _buildMoodItem('Energetic', '🤩'),
+        ].map((w) => Padding(padding: const EdgeInsets.only(right: 12), child: w)).toList(),
+      ),
     );
   }
 
-  Widget _buildMoodItem(String label, String emoji, bool isSelected) {
-    return Container(
-      width: 75,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: isSelected ? Border.all(color: AppTheme.primaryPink, width: 2) : null,
-      ),
-      child: Column(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 28)),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? AppTheme.primaryPink : AppTheme.textLight,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            ),
-          )
-        ],
+  Widget _buildMoodItem(String label, String emoji) {
+    bool isSelected = _selectedMood == label;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedMood = label),
+      child: Container(
+        width: 75,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: AppTheme.cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: isSelected ? Border.all(color: AppTheme.primaryPink, width: 2) : null,
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 28)),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppTheme.primaryPink : AppTheme.textLight,
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -215,14 +273,15 @@ class _DailyCheckinState extends State<DailyCheckin> {
       ),
       itemBuilder: (context, index) {
         final sym = symptoms[index];
-        bool isSelected = _selectedSymptoms.contains(sym['label']);
+        final label = sym['label'] as String;
+        bool isSelected = _selectedSymptoms.contains(label);
         return GestureDetector(
           onTap: () {
             setState(() {
               if (isSelected) {
-                _selectedSymptoms.remove(sym['label']);
+                _selectedSymptoms.remove(label);
               } else {
-                _selectedSymptoms.add(sym['label'] as String);
+                _selectedSymptoms.add(label);
               }
             });
           },
@@ -242,7 +301,7 @@ class _DailyCheckinState extends State<DailyCheckin> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  sym['label'] as String,
+                  label,
                   style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
                 )
               ],
@@ -275,7 +334,7 @@ class _DailyCheckinState extends State<DailyCheckin> {
             },
           ),
         ),
-        Row(
+        const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Low', style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
@@ -294,13 +353,14 @@ class _DailyCheckinState extends State<DailyCheckin> {
         border: Border.all(color: AppTheme.borderSubtle),
       ),
       child: TextField(
+        controller: _notesController,
         maxLines: 4,
         style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           hintText: 'How was your day? Any specific\npatterns...',
           hintStyle: TextStyle(color: AppTheme.textMuted, height: 1.5),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.all(20),
+          contentPadding: EdgeInsets.all(20),
         ),
       ),
     );

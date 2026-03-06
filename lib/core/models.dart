@@ -65,13 +65,73 @@ class AppState extends ChangeNotifier {
   List<DailyLog> get logs => List.unmodifiable(_logs);
   List<Doctor> get doctors => List.unmodifiable(_doctors);
 
-  // Cycle simulation
-  int get currentCycleDay => 14;
-  CyclePhase get currentPhase => CyclePhase.ovulatory;
+  // Cycle tracking
+  DateTime _cycleStartDate = DateTime.now().subtract(const Duration(days: 13)); // Default to day 14 for demo purposes
+
+  DateTime get cycleStartDate => _cycleStartDate;
+
+  void setCycleStartDate(DateTime date) {
+    _cycleStartDate = date;
+    notifyListeners();
+  }
+
+  int get currentCycleDay {
+    final now = DateTime.now();
+    final difference = now.difference(_cycleStartDate).inDays;
+    // Assuming a standard 28 day cycle for simplicity
+    return (difference % 28) + 1;
+  }
+
+  CyclePhase get currentPhase {
+    final day = currentCycleDay;
+    if (day >= 1 && day <= 5) return CyclePhase.menstrual;
+    if (day >= 6 && day <= 13) return CyclePhase.follicular;
+    if (day >= 14 && day <= 15) return CyclePhase.ovulatory;
+    return CyclePhase.luteal;
+  }
+
+  // Helpers
+  DailyLog? getLogForDate(DateTime date) {
+    try {
+      return _logs.firstWhere((log) => 
+        log.date.year == date.year && 
+        log.date.month == date.month && 
+        log.date.day == date.day
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  DailyLog? get todayLog => getLogForDate(DateTime.now());
 
   void addLog(DailyLog log) {
+    // Remove if updating same day
+    _logs.removeWhere((l) => 
+        l.date.year == log.date.year && 
+        l.date.month == log.date.month && 
+        l.date.day == log.date.day
+    );
     _logs.add(log);
+    _logs.sort((a, b) => b.date.compareTo(a.date));
     notifyListeners();
+  }
+
+  // Insight Helpers
+  Map<String, int> get symptomCounts {
+    final Map<String, int> counts = {};
+    for (var log in _logs) {
+      for (var sym in log.symptoms) {
+        counts[sym] = (counts[sym] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }
+  
+  List<MapEntry<String, int>> get topSymptoms {
+    final entries = symptomCounts.entries.toList();
+    entries.sort((a, b) => b.value.compareTo(a.value));
+    return entries;
   }
 
   void addDoctor(Doctor doc) {

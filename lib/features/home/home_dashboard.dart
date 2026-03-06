@@ -1,11 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme.dart';
+import '../../core/models.dart';
 
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({Key? key}) : super(key: key);
 
+  String _getPhaseName(CyclePhase phase) {
+    switch(phase) {
+      case CyclePhase.menstrual: return 'MENSTRUAL PHASE';
+      case CyclePhase.follicular: return 'FOLLICULAR PHASE';
+      case CyclePhase.ovulatory: return 'OVULATION PHASE';
+      case CyclePhase.luteal: return 'LUTEAL PHASE';
+    }
+  }
+
+  Color _getPhaseColor(CyclePhase phase) {
+    switch(phase) {
+      case CyclePhase.menstrual: return AppTheme.phaseMenstrual;
+      case CyclePhase.follicular: return AppTheme.phaseFollicular;
+      case CyclePhase.ovulatory: return AppTheme.phaseOvulatory;
+      case CyclePhase.luteal: return AppTheme.phaseLuteal;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    final todayLog = appState.todayLog;
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -14,17 +37,17 @@ class HomeDashboard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(appState),
               const SizedBox(height: 32),
-              _buildFlowIntensity(),
+              _buildFlowIntensity(todayLog),
               const SizedBox(height: 24),
-              _buildCurrentMood(),
+              _buildCurrentMood(todayLog, appState.currentPhase),
               const SizedBox(height: 24),
-              _buildPhysicalSymptoms(),
+              _buildPhysicalSymptoms(todayLog),
               const SizedBox(height: 24),
-              _buildEnergyAndFocus(),
+              _buildEnergyAndFocus(context, todayLog),
               const SizedBox(height: 24),
-              _buildInsightCard(),
+              _buildInsightCard(appState.currentPhase),
               const SizedBox(height: 48), // Padding for bottom nav
             ],
           ),
@@ -33,7 +56,7 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(AppState appState) {
     return Column(
       children: [
         Row(
@@ -43,17 +66,17 @@ class HomeDashboard extends StatelessWidget {
             Column(
               children: [
                 Text(
-                  'Day 14',
-                  style: TextStyle(
+                  'Day ${appState.currentCycleDay}',
+                  style: const TextStyle(
                     color: AppTheme.primaryPink,
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 Text(
-                  'OVULATION PHASE',
+                  _getPhaseName(appState.currentPhase),
                   style: TextStyle(
-                    color: AppTheme.phaseOvulatory,
+                    color: _getPhaseColor(appState.currentPhase),
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.5,
@@ -68,7 +91,8 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildFlowIntensity() {
+  Widget _buildFlowIntensity(DailyLog? log) {
+    final flow = log?.flowIntensity;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -94,10 +118,10 @@ class HomeDashboard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildFlowOption('None', false),
-              _buildFlowOption('Light', false),
-              _buildFlowOption('Medium', true),
-              _buildFlowOption('Heavy', false),
+              _buildFlowOption('None', flow == 'None'),
+              _buildFlowOption('Light', flow == 'Light'),
+              _buildFlowOption('Medium', flow == 'Medium'),
+              _buildFlowOption('Heavy', flow == 'Heavy'),
             ],
           ),
         )
@@ -126,7 +150,8 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildCurrentMood() {
+  Widget _buildCurrentMood(DailyLog? log, CyclePhase phase) {
+    final mood = log?.mood;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -138,7 +163,7 @@ class HomeDashboard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.emoji_emotions, color: AppTheme.phaseOvulatory),
+              Icon(Icons.emoji_emotions, color: _getPhaseColor(phase)),
               const SizedBox(width: 8),
               const Text(
                 'Current Mood',
@@ -151,12 +176,14 @@ class HomeDashboard extends StatelessWidget {
             spacing: 12,
             runSpacing: 12,
             children: [
-              _buildChip('Energetic', false),
-              _buildChip('Calm', false),
-              _buildChip('Happy', true),
-              _buildChip('Anxious', false),
-              _buildChip('Productive', false),
-              _buildChip('Sensitive', false),
+              _buildChip('Energetic', mood == 'Energetic'),
+              _buildChip('Calm', mood == 'Calm'),
+              _buildChip('Happy', mood == 'Happy'),
+              _buildChip('Anxious', mood == 'Anxious'),
+              _buildChip('Productive', mood == 'Productive'),
+              _buildChip('Sensitive', mood == 'Sensitive'),
+              _buildChip('Tired', mood == 'Tired'),
+              _buildChip('Sad', mood == 'Sad'),
             ],
           )
         ],
@@ -168,7 +195,7 @@ class HomeDashboard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? AppTheme.primaryPink.withOpacity(0.15) : Colors.transparent,
+        color: isSelected ? AppTheme.primaryPink.withValues(alpha: 0.15) : Colors.transparent,
         border: Border.all(
           color: isSelected ? AppTheme.primaryPink : AppTheme.borderSubtle,
         ),
@@ -183,7 +210,8 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildPhysicalSymptoms() {
+  Widget _buildPhysicalSymptoms(DailyLog? log) {
+    final symps = log?.symptoms ?? [];
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -195,7 +223,7 @@ class HomeDashboard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.medical_services_outlined, color: AppTheme.primaryPink),
+              const Icon(Icons.medical_services_outlined, color: AppTheme.primaryPink),
               const SizedBox(width: 8),
               const Text(
                 'Physical Symptoms',
@@ -207,12 +235,17 @@ class HomeDashboard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildSymptomIcon(Icons.waves, 'CRAMPS', false),
-              _buildSymptomIcon(Icons.bolt, 'HEADACHE', true),
-              _buildSymptomIcon(Icons.air, 'BLOATING', false),
-              _buildSymptomIcon(Icons.spa, 'SKIN', false),
+              _buildSymptomIcon(Icons.waves, 'CRAMPS', symps.contains('Cramps')),
+              _buildSymptomIcon(Icons.bolt, 'HEADACHE', symps.contains('Headache')),
+              _buildSymptomIcon(Icons.air, 'BLOATING', symps.contains('Bloating')),
+              _buildSymptomIcon(Icons.spa, 'ACNE', symps.contains('Acne')),
             ],
-          )
+          ),
+          if (symps.isEmpty)
+             Padding(
+                 padding: const EdgeInsets.only(top: 16),
+                 child: Text("No symptoms logged today", style: TextStyle(color: AppTheme.textMuted, fontStyle: FontStyle.italic)),
+             )
         ],
       ),
     );
@@ -225,7 +258,7 @@ class HomeDashboard extends StatelessWidget {
           height: 60,
           width: 60,
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.primaryPink.withOpacity(0.15) : AppTheme.background.withOpacity(0.5),
+            color: isSelected ? AppTheme.primaryPink.withValues(alpha: 0.15) : AppTheme.background.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
             border: isSelected ? Border.all(color: AppTheme.primaryPink, width: 2) : null,
           ),
@@ -248,7 +281,8 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildEnergyAndFocus() {
+  Widget _buildEnergyAndFocus(BuildContext context, DailyLog? log) {
+    final energy = log?.energyLevel ?? 0;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -260,7 +294,7 @@ class HomeDashboard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.battery_charging_full, color: AppTheme.primaryPink),
+              const Icon(Icons.battery_charging_full, color: AppTheme.primaryPink),
               const SizedBox(width: 8),
               const Text(
                 'Energy & Focus',
@@ -280,13 +314,13 @@ class HomeDashboard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [1, 2, 3, 4, 5].map((level) {
-              bool isSelected = level == 4;
+              bool isSelected = level == energy;
               return Container(
                 height: 40,
                 width: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isSelected ? AppTheme.primaryPink.withOpacity(0.15) : AppTheme.background.withOpacity(0.5),
+                  color: isSelected ? AppTheme.primaryPink.withValues(alpha: 0.15) : AppTheme.background.withValues(alpha: 0.5),
                   border: isSelected ? Border.all(color: AppTheme.primaryPink, width: 2) : null,
                 ),
                 child: Center(
@@ -302,33 +336,39 @@ class HomeDashboard extends StatelessWidget {
               );
             }).toList(),
           ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('DISTRACTED', style: TextStyle(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
-              Text('LASER FOCUS', style: TextStyle(color: AppTheme.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppTheme.phaseOvulatory,
-              inactiveTrackColor: AppTheme.borderSubtle,
-              thumbColor: Colors.white,
-              trackHeight: 6,
-            ),
-            child: Slider(
-              value: 0.7,
-              onChanged: (val) {},
-            ),
-          )
         ],
       ),
     );
   }
 
-  Widget _buildInsightCard() {
+  Widget _buildInsightCard(CyclePhase phase) {
+    String title = "DAILY INSIGHT";
+    String description = "Listen to your body today.";
+    Color baseColor = AppTheme.primaryPink;
+
+    switch(phase) {
+      case CyclePhase.menstrual:
+        title = "MENSTRUAL INSIGHT";
+        description = "Your body is working hard. Focus on rest, gentle stretches, and staying hydrated.";
+        baseColor = AppTheme.phaseMenstrual;
+        break;
+      case CyclePhase.follicular:
+        title = "FOLLICULAR INSIGHT";
+        description = "Estrogen is rising! You might feel more creative and ready to tackle new challenges.";
+        baseColor = AppTheme.phaseFollicular;
+        break;
+      case CyclePhase.ovulatory:
+        title = "OVULATION INSIGHT";
+        description = "Your energy peaks today. It's a great time for high-intensity workouts and creative projects.";
+        baseColor = AppTheme.phaseOvulatory;
+        break;
+      case CyclePhase.luteal:
+        title = "LUTEAL INSIGHT";
+        description = "Energy might dip as your period approaches. Prioritize self-care and light exercise.";
+        baseColor = AppTheme.phaseLuteal;
+        break;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
@@ -341,14 +381,14 @@ class HomeDashboard extends StatelessWidget {
             borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), bottomLeft: Radius.circular(24)),
             child: Container(
               width: 120,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.orangeAccent, Colors.deepOrange],
+                  colors: [baseColor, baseColor.withValues(alpha: 0.4)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
               ),
-              child: const Icon(Icons.wb_sunny, color: Colors.white, size: 60),
+              child: const Icon(Icons.psychology_outlined, color: Colors.white, size: 60),
             ),
           ),
           Expanded(
@@ -358,12 +398,12 @@ class HomeDashboard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'OVULATION INSIGHT',
-                    style: TextStyle(color: AppTheme.primaryPink, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    title,
+                    style: TextStyle(color: baseColor, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Your energy peaks today. It's a great time for high-intensity workouts and creative projects.",
+                    description,
                     style: TextStyle(color: AppTheme.textLight, fontSize: 14, height: 1.4),
                   ),
                 ],

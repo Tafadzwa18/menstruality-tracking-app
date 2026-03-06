@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../core/models.dart';
-import 'export_config.dart';
+import '../export/export_config.dart';
 import 'symptom_trends.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -11,6 +11,8 @@ class TrendsOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
+    
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -42,7 +44,7 @@ class TrendsOverview extends StatelessWidget {
               children: [
                 Expanded(child: GestureDetector(
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SymptomTrends())),
-                  child: _buildTopSymptomsCard()
+                  child: _buildTopSymptomsCard(appState)
                 )),
                 const SizedBox(width: 16),
                 Expanded(child: _buildConsistencyCard()),
@@ -256,7 +258,10 @@ class TrendsOverview extends StatelessWidget {
     );
   }
 
-  Widget _buildTopSymptomsCard() {
+  Widget _buildTopSymptomsCard(AppState appState) {
+    final topSymptomsList = appState.topSymptoms.take(3).toList();
+    final totalLogs = appState.logs.length;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -268,11 +273,16 @@ class TrendsOverview extends StatelessWidget {
         children: [
           const Text('Top Symptoms', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
-          _buildSymptomBar('Bloating', 0.65, '65%'),
-          const SizedBox(height: 12),
-          _buildSymptomBar('Cramps', 0.42, '42%'),
-          const SizedBox(height: 12),
-          _buildSymptomBar('Headache', 0.18, '18%'),
+          if (topSymptomsList.isEmpty)
+             Text("No symptoms logged yet.", style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
+          ...topSymptomsList.map((entry) {
+             final percent = totalLogs > 0 ? (entry.value / totalLogs) : 0.0;
+             final percentText = '${(percent * 100).round()}%';
+             return Padding(
+               padding: const EdgeInsets.only(bottom: 12),
+               child: _buildSymptomBar(entry.key, percent, percentText),
+             );
+          }).toList(),
         ],
       ),
     );
