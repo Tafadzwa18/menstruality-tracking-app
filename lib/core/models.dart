@@ -1,15 +1,29 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'sync_service.dart';
+
+part 'models.g.dart';
 
 enum CyclePhase { menstrual, follicular, ovulatory, luteal }
 
+@HiveType(typeId: 0)
 class DailyLog {
+  @HiveField(0)
   final DateTime date;
+  @HiveField(1)
   final String flowIntensity; // Light, Medium, Heavy, None
+  @HiveField(2)
   final String mood; // Emoji string
+  @HiveField(3)
   final List<String> symptoms;
+  @HiveField(4)
   final int energyLevel; // 1 to 5
+  @HiveField(5)
   final String notes;
+  @HiveField(6)
+  final bool isSynced;
 
   DailyLog({
     required this.date,
@@ -18,15 +32,60 @@ class DailyLog {
     required this.symptoms,
     required this.energyLevel,
     this.notes = '',
+    this.isSynced = false,
   });
+
+  Map<String, dynamic> toMap(String userId) {
+    return {
+      'user_id': userId,
+      'date': date.toIso8601String().substring(0, 10), // YYYY-MM-DD
+      'flow_intensity': flowIntensity,
+      'mood': mood,
+      'symptoms': symptoms,
+      'energy_level': energyLevel,
+      'notes': notes,
+    };
+  }
+
+  factory DailyLog.fromMap(Map<String, dynamic> map) {
+    return DailyLog(
+      date: DateTime.parse(map['date']),
+      flowIntensity: map['flow_intensity'] ?? 'None',
+      mood: map['mood'] ?? '',
+      symptoms: List<String>.from(map['symptoms'] ?? []),
+      energyLevel: map['energy_level'] ?? 3,
+      notes: map['notes'] ?? '',
+      isSynced: true,
+    );
+  }
+
+  DailyLog copyWith({bool? isSynced}) {
+    return DailyLog(
+      date: date,
+      flowIntensity: flowIntensity,
+      mood: mood,
+      symptoms: symptoms,
+      energyLevel: energyLevel,
+      notes: notes,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
 }
 
+@HiveType(typeId: 1)
 class Doctor {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String name;
+  @HiveField(2)
   final String specialty;
+  @HiveField(3)
   final String email;
+  @HiveField(4)
   final String phone;
+  @HiveField(5)
+  final bool isSynced;
 
   Doctor({
     required this.id,
@@ -34,7 +93,41 @@ class Doctor {
     required this.specialty,
     required this.email,
     required this.phone,
+    this.isSynced = false,
   });
+
+  Map<String, dynamic> toMap(String userId) {
+    return {
+      'id': id,
+      'user_id': userId,
+      'name': name,
+      'specialty': specialty,
+      'email': email,
+      'phone': phone,
+    };
+  }
+
+  factory Doctor.fromMap(Map<String, dynamic> map) {
+    return Doctor(
+      id: map['id'],
+      name: map['name'],
+      specialty: map['specialty'],
+      email: map['email'],
+      phone: map['phone'],
+      isSynced: true,
+    );
+  }
+
+  Doctor copyWith({bool? isSynced}) {
+    return Doctor(
+      id: id,
+      name: name,
+      specialty: specialty,
+      email: email,
+      phone: phone,
+      isSynced: isSynced ?? this.isSynced,
+    );
+  }
 }
 
 class AppState extends ChangeNotifier {
@@ -44,115 +137,80 @@ class AppState extends ChangeNotifier {
   bool get isInitialized => _isInitialized;
   bool get isLoggedIn => _isLoggedIn;
 
-  // Mock User Info
-  String _userName = 'Eleanor';
-  String _userEmail = 'eleanor@example.com';
+  String _userName = 'User';
+  String _userEmail = '';
   
   String get userName => _userName;
   String get userEmail => _userEmail;
 
+  final _supabase = Supabase.instance.client;
+  final _syncService = SyncService();
+
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    final session = _supabase.auth.currentSession;
+    _isLoggedIn = session != null;
     
     if (_isLoggedIn) {
-      _userName = prefs.getString('userName') ?? 'Eleanor';
-      _userEmail = prefs.getString('userEmail') ?? 'eleanor@example.com';
-      _cycleLength = prefs.getInt('cycleLength') ?? 28;
-      _periodLength = prefs.getInt('periodLength') ?? 5;
+      _userEmail = session?.user.email ?? '';
+      _userName = session?.user.userMetadata?['full_name'] ?? 'User';
+      
+      // Sync offline data
+      try {
+        await _syncService.syncPendingData();
+      } catch (e) {
+        debugPrint('Initial sync failed: $e');
+      }
     }
+    
+    final prefs = await SharedPreferences.getInstance();
+    _cycleLength = prefs.getInt('cycleLength') ?? 28;
+    _periodLength = prefs.getInt('periodLength') ?? 5;
     
     _isInitialized = true;
     notifyListeners();
   }
 
   Future<void> register(String name, String email, String password) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 2));
+    final response = await _supabase.auth.signUp(
+      email: email,
+      password: password,
+      data: {'full_name': name},
+    );
     
-    _userName = name;
-    _userEmail = email;
-    _isLoggedIn = true;
-    
-    // Clear all existing mock data on registration to give a clean slate
-    _logs.clear();
-    _cycleLength = 28;
-    _periodLength = 5;
-    
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('userName', name);
-    await prefs.setString('userEmail', email);
-    await prefs.setInt('cycleLength', 28);
-    await prefs.setInt('periodLength', 5);
-    
-    notifyListeners();
+    if (response.user != null) {
+      _userName = name;
+      _userEmail = email;
+      _isLoggedIn = (_supabase.auth.currentSession != null);
+      notifyListeners();
+    }
   }
 
   Future<void> login(String email, String password) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 2));
+    final response = await _supabase.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
     
-    _isLoggedIn = true;
-    
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('userName', _userName);
-    
-    notifyListeners();
+    if (response.user != null) {
+      _isLoggedIn = true;
+      _userEmail = email;
+      _userName = response.user!.userMetadata?['full_name'] ?? 'User';
+      
+      // Load user data from cloud
+      await _syncService.fetchFromCloud();
+      notifyListeners();
+    }
   }
 
   Future<void> logout() async {
+    await _supabase.auth.signOut();
     _isLoggedIn = false;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('isLoggedIn');
     notifyListeners();
   }
 
-  // Mock Data
-  final List<DailyLog> _logs = [
-    DailyLog(
-      date: DateTime.now().subtract(const Duration(days: 0)),
-      mood: 'Calm',
-      symptoms: ['Cramps', 'Bloating'],
-      energyLevel: 3,
-      notes: 'Feeling okay today.',
-      flowIntensity: 'Medium',
-    ),
-    DailyLog(
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      mood: 'Tired',
-      symptoms: ['Headache'],
-      energyLevel: 2,
-      notes: 'Had a long day.',
-      flowIntensity: 'Heavy',
-    ),
-  ];
-  
-  final List<Doctor> _doctors = [
-    Doctor(id: '1', name: 'Dr. Sarah Jenkins', specialty: 'Gynecologist', email: 'sarah@example.com', phone: '555-0100'),
-    Doctor(id: '2', name: 'Dr. Emily Chen', specialty: 'Primary Care', email: 'emily@example.com', phone: '555-0200'),
-  ];
-  
-  // Settings
-  bool _notificationsEnabled = true;
-  bool _darkModeEnabled = true;
-
-  bool get notificationsEnabled => _notificationsEnabled;
-  bool get darkModeEnabled => _darkModeEnabled;
-
-  void toggleNotifications(bool value) {
-    _notificationsEnabled = value;
-    notifyListeners();
-  }
-
-  void toggleDarkMode(bool value) {
-    _darkModeEnabled = value;
-    notifyListeners();
-  }
-
-  List<DailyLog> get logs => List.unmodifiable(_logs);
-  List<Doctor> get doctors => List.unmodifiable(_doctors);
+  // Data Access using SyncService
+  List<DailyLog> get logs => _syncService.getAllLogs();
+  List<Doctor> get doctors => _syncService.getAllDoctors();
 
   // Cycle tracking
   int _cycleLength = 28;
@@ -175,7 +233,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  DateTime _cycleStartDate = DateTime.now().subtract(const Duration(days: 13)); // Default to day 14 for demo purposes
+  DateTime _cycleStartDate = DateTime.now().subtract(const Duration(days: 13)); 
 
   DateTime get cycleStartDate => _cycleStartDate;
 
@@ -194,7 +252,6 @@ class AppState extends ChangeNotifier {
     final day = currentCycleDay;
     if (day >= 1 && day <= _periodLength) return CyclePhase.menstrual;
     
-    // Approximate phases based on dynamic cycle length
     final ovulationDay = _cycleLength - 14; 
     
     if (day > _periodLength && day < ovulationDay - 1) return CyclePhase.follicular;
@@ -205,7 +262,7 @@ class AppState extends ChangeNotifier {
   // Helpers
   DailyLog? getLogForDate(DateTime date) {
     try {
-      return _logs.firstWhere((log) => 
+      return logs.firstWhere((log) => 
         log.date.year == date.year && 
         log.date.month == date.month && 
         log.date.day == date.day
@@ -217,22 +274,32 @@ class AppState extends ChangeNotifier {
 
   DailyLog? get todayLog => getLogForDate(DateTime.now());
 
-  void addLog(DailyLog log) {
-    // Remove if updating same day
-    _logs.removeWhere((l) => 
-        l.date.year == log.date.year && 
-        l.date.month == log.date.month && 
-        l.date.day == log.date.day
-    );
-    _logs.add(log);
-    _logs.sort((a, b) => b.date.compareTo(a.date));
+  Future<void> addLog(DailyLog log) async {
+    await _syncService.saveLog(log);
+    notifyListeners();
+  }
+
+  // Settings
+  bool _notificationsEnabled = true;
+  bool _darkModeEnabled = true;
+
+  bool get notificationsEnabled => _notificationsEnabled;
+  bool get darkModeEnabled => _darkModeEnabled;
+
+  void toggleNotifications(bool value) {
+    _notificationsEnabled = value;
+    notifyListeners();
+  }
+
+  void toggleDarkMode(bool value) {
+    _darkModeEnabled = value;
     notifyListeners();
   }
 
   // Insight Helpers
   Map<String, int> get symptomCounts {
     final Map<String, int> counts = {};
-    for (var log in _logs) {
+    for (var log in logs) {
       for (var sym in log.symptoms) {
         counts[sym] = (counts[sym] ?? 0) + 1;
       }
@@ -247,7 +314,7 @@ class AppState extends ChangeNotifier {
   }
 
   void addDoctor(Doctor doc) {
-    _doctors.add(doc);
+    // Note: Future feature to sync doctors specifically
     notifyListeners();
   }
 }

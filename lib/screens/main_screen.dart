@@ -16,11 +16,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [ // Renamed to _pages from _screens in the instruction, but keeping original name for consistency with existing code structure
+  final List<Widget> _pages = [
     const HomeDashboard(),
     const TrendsOverview(),
     const DoctorList(),
-    const ProfileScreen(), // Replaced the placeholder with ProfileScreen
+    const ProfileScreen(),
   ];
 
   @override
