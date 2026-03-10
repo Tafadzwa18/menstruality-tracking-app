@@ -147,27 +147,41 @@ class AppState extends ChangeNotifier {
   final _syncService = SyncService();
 
   Future<void> init() async {
+    // Initial check - set state silently
     final session = _supabase.auth.currentSession;
-    _isLoggedIn = session != null;
+    _updateAuthState(session, notify: false);
     
-    if (_isLoggedIn) {
-      _userEmail = session?.user.email ?? '';
-      _userName = session?.user.userMetadata?['full_name'] ?? 'User';
-      
-      // Sync offline data
-      try {
-        await _syncService.syncPendingData();
-      } catch (e) {
-        debugPrint('Initial sync failed: $e');
-      }
-    }
+    // Listen for changes (Login, Logout, Token Refresh)
+    _supabase.auth.onAuthStateChange.listen((data) {
+      _updateAuthState(data.session);
+    });
     
     final prefs = await SharedPreferences.getInstance();
     _cycleLength = prefs.getInt('cycleLength') ?? 28;
     _periodLength = prefs.getInt('periodLength') ?? 5;
     
+    if (_isLoggedIn) {
+      // Sync offline data in background
+      _syncService.syncPendingData().catchError((e) {
+        debugPrint('Sync failed: $e');
+      });
+    }
+
     _isInitialized = true;
     notifyListeners();
+  }
+
+  void _updateAuthState(Session? session, {bool notify = true}) {
+    _isLoggedIn = session != null;
+    if (_isLoggedIn) {
+      _userEmail = session?.user.email ?? '';
+      _userName = session?.user.userMetadata?['full_name'] ?? 'User';
+    } else {
+      _userEmail = '';
+      _userName = 'User';
+    }
+    
+    if (notify) notifyListeners();
   }
 
   Future<void> register(String name, String email, String password) async {
@@ -206,6 +220,14 @@ class AppState extends ChangeNotifier {
     await _supabase.auth.signOut();
     _isLoggedIn = false;
     notifyListeners();
+  }
+
+  Future<void> deleteAccount() async {
+    // Note: In a production app, this would involve calling a Supabase Edge Function 
+    // to delete the user record from the auth.users table.
+    // For now, we will sign out and clear local data.
+    await logout();
+    await _syncService.clearLocalData();
   }
 
   // Data Access using SyncService
@@ -297,6 +319,33 @@ class AppState extends ChangeNotifier {
   }
 
   // Insight Helpers
+  List<double> get energyChartData {
+    final now = DateTime.now();
+    return List.generate(28, (i) {
+      final date = now.subtract(Duration(days: 27 - i));
+      final log = getLogForDate(date);
+      return log?.energyLevel.toDouble() ?? 0.0;
+    });
+  }
+
+  List<double> get moodChartData {
+    final now = DateTime.now();
+    return List.generate(28, (i) {
+      final date = now.subtract(Duration(days: 27 - i));
+      final log = getLogForDate(date);
+      if (log == null) return 0.0;
+      
+      // Map mood emojis/labels to 1-10 scale
+      switch (log.mood) {
+        case 'Happy': case 'Energetic': case 'Productive': return 9.0;
+        case 'Calm': return 7.0;
+        case 'Tired': case 'Sensitive': return 4.0;
+        case 'Sad': case 'Anxious': return 2.0;
+        default: return 5.0;
+      }
+    });
+  }
+
   Map<String, int> get symptomCounts {
     final Map<String, int> counts = {};
     for (var log in logs) {

@@ -121,4 +121,9 @@ class SyncService {
 
   List<DailyLog> getAllLogs() => _logBox.values.toList()..sort((a, b) => b.date.compareTo(a.date));
   List<Doctor> getAllDoctors() => _doctorBox.values.toList();
+
+  Future<void> clearLocalData() async {
+    await _logBox.clear();
+    await _doctorBox.clear();
+  }
 }

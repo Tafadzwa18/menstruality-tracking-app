@@ -4,6 +4,7 @@ import '../../core/theme.dart';
 import '../../core/models.dart';
 import '../export/export_config.dart';
 import 'symptom_trends.dart';
+import '../../screens/calendar_screen.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 class TrendsOverview extends StatelessWidget {
@@ -25,7 +26,7 @@ class TrendsOverview extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.calendar_today_outlined, size: 22),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calendar coming soon!')));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const CalendarScreen()));
             },
           ),
           IconButton(
@@ -43,7 +44,7 @@ class TrendsOverview extends StatelessWidget {
           children: [
             _buildTimeSegment(),
             const SizedBox(height: 24),
-            _buildChartCard(),
+            _buildChartCard(appState),
             const SizedBox(height: 16),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +147,13 @@ class TrendsOverview extends StatelessWidget {
     );
   }
 
-  Widget _buildChartCard() {
+  Widget _buildChartCard(AppState appState) {
+    final energyData = appState.energyChartData;
+    final moodData = appState.moodChartData;
+    
+    final energySpots = List.generate(28, (i) => FlSpot(i.toDouble(), energyData[i]));
+    final moodSpots = List.generate(28, (i) => FlSpot(i.toDouble(), moodData[i]));
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -208,30 +215,26 @@ class TrendsOverview extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
-                      interval: 1,
+                      interval: 7,
                       getTitlesWidget: (value, meta) {
-                        String text = '';
-                        if (value == 1) text = 'Day 1';
-                        if (value == 14) text = 'Day 14';
-                        if (value == 28) text = 'Day 28';
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(text, style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
-                        );
+                        if (value == 0) return const Text('Day 1', style: TextStyle(color: AppTheme.textMuted, fontSize: 10));
+                        if (value == 13) return const Text('Day 14', style: TextStyle(color: AppTheme.textMuted, fontSize: 10));
+                        if (value == 27) return const Text('Day 28', style: TextStyle(color: AppTheme.textMuted, fontSize: 10));
+                        return const Text('');
                       },
                     ),
                   ),
                 ),
                 borderData: FlBorderData(show: false),
-                minX: 0, maxX: 29, minY: 0, maxY: 10,
+                minX: 0, maxX: 27, minY: 0, maxY: 10,
                 lineBarsData: [
                   LineChartBarData(
-                    spots: const [FlSpot(0, 3), FlSpot(5, 5), FlSpot(10, 4), FlSpot(14, 4), FlSpot(18, 6), FlSpot(21, 8), FlSpot(25, 4), FlSpot(29, 0)],
+                    spots: moodSpots,
                     isCurved: true, color: AppTheme.phaseOvulatory, barWidth: 4, isStrokeCapRound: true,
                     dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: false), dashArray: [8, 4],
                   ),
                   LineChartBarData(
-                    spots: const [FlSpot(0, 2), FlSpot(4, 5), FlSpot(7, 7), FlSpot(12, 5), FlSpot(16, 6), FlSpot(20, 10), FlSpot(24, 6), FlSpot(27, 2), FlSpot(29, 5)],
+                    spots: energySpots,
                     isCurved: true, color: AppTheme.primaryPink, barWidth: 4, isStrokeCapRound: true,
                     dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, color: AppTheme.primaryPink.withValues(alpha: 0.1)),
                   ),

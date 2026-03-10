@@ -4,13 +4,64 @@ import '../../core/theme.dart';
 import '../../core/models.dart';
 import '../export/export_config.dart';
 import '../onboarding/onboarding_screen.dart';
+import '../doctors/doctor_list.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({Key? key}) : super(key: key);
 
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature coming soon!')),
+  void _showPrivacyPolicy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardColor,
+        title: const Text('Privacy Policy', style: TextStyle(color: Colors.white)),
+        content: const SingleChildScrollView(
+          child: Text(
+            'Your privacy is our priority. Your menstuality data is stored locally on your device and encrypted when synced to your private Supabase account. We do not sell or share your personal health information with third parties.\n\nYou have full control over your data and can delete your account at any time.',
+            style: TextStyle(color: AppTheme.textLight, height: 1.5),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: AppTheme.primaryPink)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.cardColor,
+        title: const Text('Delete Account', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Are you sure you want to delete your account? This action is permanent and will remove all your cycle logs and data from our servers.',
+          style: TextStyle(color: AppTheme.textLight),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () async {
+              await context.read<AppState>().deleteAccount();
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+                  (route) => false,
+                );
+              }
+            },
+            child: const Text('Delete permanently'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -91,7 +142,6 @@ class SettingsScreen extends StatelessWidget {
                   value: appState.darkModeEnabled,
                   onChanged: (val) {
                     context.read<AppState>().toggleDarkMode(val);
-                    _showComingSoon(context, "Light Mode themes"); // Since we've only built dark so far
                   },
                 ),
               ],
@@ -138,7 +188,7 @@ class SettingsScreen extends StatelessWidget {
                 _buildActionTile(
                   icon: Icons.security,
                   title: 'Privacy Policy',
-                  onTap: () => _showComingSoon(context, "Privacy Policy"),
+                  onTap: () => _showPrivacyPolicy(context),
                 ),
               ],
             ),
@@ -168,7 +218,7 @@ class SettingsScreen extends StatelessWidget {
                   titleColor: Colors.redAccent,
                   iconColor: Colors.redAccent,
                   hideArrow: true,
-                  onTap: () => _showComingSoon(context, "Delete Account"),
+                  onTap: () => _showDeleteAccountConfirmation(context),
                 ),
               ],
             ),

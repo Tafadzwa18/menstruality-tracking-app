@@ -14,6 +14,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _isLogin = true;
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -33,17 +34,45 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               _emailController.text,
               _passwordController.text,
             );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Login successful!')),
+          );
+        }
       } else {
         await context.read<AppState>().register(
               _nameController.text,
               _emailController.text,
               _passwordController.text,
             );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Account created successfully!')),
+          );
+        }
       }
 
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An unexpected error occurred: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     } finally {
@@ -117,7 +146,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     controller: _passwordController,
                     label: 'Password',
                     icon: Icons.lock_outline,
-                    obscureText: true,
+                    obscureText: _obscurePassword,
+                    suffixIcon: _buildVisibilityToggle(),
                     validator: (value) => value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
                   ),
                   const SizedBox(height: 32),
@@ -171,11 +201,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  Widget _buildVisibilityToggle() {
+    return IconButton(
+      icon: Icon(
+        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+        color: AppTheme.textMuted,
+        size: 20,
+      ),
+      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
     required IconData icon,
     bool obscureText = false,
+    Widget? suffixIcon,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
@@ -188,6 +230,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         labelText: label,
         labelStyle: const TextStyle(color: AppTheme.textMuted),
         prefixIcon: Icon(icon, color: AppTheme.textMuted),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: AppTheme.cardColor,
         border: OutlineInputBorder(

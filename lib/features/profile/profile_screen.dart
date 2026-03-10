@@ -156,8 +156,7 @@ class ProfileScreen extends StatelessWidget {
           )),
           _buildDivider(),
           _buildListTile(context, Icons.medical_information_outlined, 'My Care Team', onTap: () {
-            // Note: Ideally navigate to DoctorList here but keeping it simple for now
-            _showComingSoon(context, "Care Team navigation"); 
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const DoctorList()));
           }),
           _buildDivider(),
           _buildListTile(context, Icons.help_outline, 'Help & Support', onTap: () => _showComingSoon(context, "Support")),
