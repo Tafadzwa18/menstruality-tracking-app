@@ -75,17 +75,20 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _currentIndex == index;
     final color = isSelected ? AppTheme.primaryPinkLight : AppTheme.textMuted;
-    
+
     return InkWell(
-        onTap: () => setState(() => _currentIndex = index),
-        customBorder: const CircleBorder(),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Column(
+      onTap: () => setState(() => _currentIndex = index),
+      customBorder: const CircleBorder(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 5,
+          vertical: 4,
+        ), // Reduced vertical padding
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 26),
+            Icon(icon, color: color, size: 22), // Reduced icon size
             const SizedBox(height: 4),
             Text(
               label,
