@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../core/models.dart';
+import '../../screens/calendar_screen.dart';
 
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({Key? key}) : super(key: key);
@@ -48,7 +49,7 @@ class HomeDashboard extends StatelessWidget {
               _buildEnergyAndFocus(context, todayLog),
               const SizedBox(height: 24),
               _buildInsightCard(appState.currentPhase),
-              const SizedBox(height: 48), // Padding for bottom nav
+              const SizedBox(height: 16), 
             ],
           ),
         ),
@@ -62,12 +63,7 @@ class HomeDashboard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white, size: 28),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menu coming soon!')));
-              },
-            ),
+            const SizedBox(width: 48), // Placeholder for removed menu icon
             Column(
               children: [
                 Text(
@@ -92,7 +88,10 @@ class HomeDashboard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.calendar_today_outlined, color: Colors.white, size: 26),
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calendar coming soon!')));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CalendarScreen()),
+                );
               },
             ),
           ],

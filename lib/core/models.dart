@@ -199,11 +199,11 @@ class AppState extends ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  Future<void> register(String name, String email, String password) async {
+  Future<void> register(String name, String email, String password, String phone) async {
     final response = await _supabase.auth.signUp(
       email: email,
       password: password,
-      data: {'full_name': name},
+      data: {'full_name': name, 'phone_number': phone},
     );
     
     if (response.user != null) {

@@ -20,6 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
   Future<void> _submit() async {
@@ -37,7 +38,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login successful!')),
+            const SnackBar(
+              content: Text('Login successful!'),
+              backgroundColor: AppTheme.primaryPink,
+            ),
           );
         }
       } else {
@@ -45,10 +49,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               _nameController.text,
               _emailController.text,
               _passwordController.text,
+              _phoneController.text,
             );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account created successfully!')),
+            const SnackBar(
+              content: Text('Account created successfully!'),
+              backgroundColor: AppTheme.primaryPink,
+            ),
           );
         }
       }
@@ -63,7 +71,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.message),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: AppTheme.phaseMenstrual,
           ),
         );
       }
@@ -72,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('An unexpected error occurred: $e'),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: AppTheme.phaseMenstrual,
           ),
         );
       }
@@ -134,6 +142,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
                     ),
                     const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _phoneController,
+                      label: 'Phone Number',
+                      icon: Icons.phone_outlined,
+                      keyboardType: TextInputType.phone,
+                      validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
+                    ),
+                    const SizedBox(height: 16),
                   ],
                   _buildTextField(
                     controller: _emailController,
@@ -163,7 +179,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       onPressed: _isLoading ? null : _submit,
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : Text(
                               _isLogin ? 'Sign In' : 'Sign Up',
                               style: const TextStyle(
