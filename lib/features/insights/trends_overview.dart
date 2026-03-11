@@ -74,9 +74,9 @@ class TrendsOverview extends StatelessWidget {
        child: Container(
          padding: const EdgeInsets.all(20),
          decoration: BoxDecoration(
-           color: AppTheme.primaryPink.withValues(alpha: 0.1),
+           color: AppTheme.primaryPink.withOpacity(0.1),
            borderRadius: BorderRadius.circular(24),
-           border: Border.all(color: AppTheme.primaryPink.withValues(alpha: 0.3)),
+           border: Border.all(color: AppTheme.primaryPink.withOpacity(0.3)),
          ),
          child: Row(
            mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -128,7 +128,7 @@ class TrendsOverview extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppTheme.primaryPink.withValues(alpha: 0.4),
+                    color: AppTheme.primaryPink.withOpacity(0.4),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   )
@@ -236,7 +236,7 @@ class TrendsOverview extends StatelessWidget {
                   LineChartBarData(
                     spots: energySpots,
                     isCurved: true, color: AppTheme.primaryPink, barWidth: 4, isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, color: AppTheme.primaryPink.withValues(alpha: 0.1)),
+                    dotData: const FlDotData(show: false), belowBarData: BarAreaData(show: true, color: AppTheme.primaryPink.withOpacity(0.1)),
                   ),
                 ],
               ),
@@ -379,7 +379,7 @@ class TrendsOverview extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primaryPink.withValues(alpha: 0.15),
+              color: AppTheme.primaryPink.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.lightbulb, color: AppTheme.primaryPink, size: 24),

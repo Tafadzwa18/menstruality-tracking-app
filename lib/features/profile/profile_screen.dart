@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/models.dart';
 import '../../core/theme.dart';
 import 'settings_screen.dart';
+import '../doctors/doctor_list.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -24,7 +25,7 @@ class ProfileScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, size: 24),
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen())),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen())),
           ),
           const SizedBox(width: 8),
         ],
@@ -58,7 +59,7 @@ class ProfileScreen extends StatelessWidget {
           width: 80,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppTheme.primaryPink.withValues(alpha: 0.2),
+            color: AppTheme.primaryPink.withOpacity(0.2),
             border: Border.all(color: AppTheme.primaryPink, width: 2),
           ),
           child: const Center(
@@ -118,7 +119,7 @@ class ProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryPink.withValues(alpha: 0.15),
+                color: AppTheme.primaryPink.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: AppTheme.primaryPink, size: 18),
@@ -156,7 +157,7 @@ class ProfileScreen extends StatelessWidget {
           )),
           _buildDivider(),
           _buildListTile(context, Icons.medical_information_outlined, 'My Care Team', onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const DoctorList()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => DoctorList()));
           }),
           _buildDivider(),
           _buildListTile(context, Icons.help_outline, 'Help & Support', onTap: () => _showComingSoon(context, "Support")),

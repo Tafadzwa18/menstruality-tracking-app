@@ -140,7 +140,7 @@ class _DailyCheckinState extends State<DailyCheckin> {
                 decoration: BoxDecoration(
                   color: AppTheme.primaryPink,
                   borderRadius: BorderRadius.circular(25),
-                  boxShadow: [BoxShadow(color: AppTheme.primaryPink.withValues(alpha: 0.4), blurRadius: 15, spreadRadius: 2)],
+                  boxShadow: [BoxShadow(color: AppTheme.primaryPink.withOpacity(0.4), blurRadius: 15, spreadRadius: 2)],
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

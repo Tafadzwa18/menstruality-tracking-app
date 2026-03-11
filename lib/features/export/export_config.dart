@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../core/models.dart';
@@ -137,7 +138,7 @@ class _ExportConfigState extends State<ExportConfig> {
                     icon: const Icon(Icons.medical_services, color: AppTheme.primaryPink),
                     label: const Text('Share with Doctor', style: TextStyle(color: AppTheme.primaryPink)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryPink.withValues(alpha: 0.1),
+                      backgroundColor: AppTheme.primaryPink.withOpacity(0.1),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                   ),

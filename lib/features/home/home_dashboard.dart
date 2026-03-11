@@ -205,7 +205,7 @@ class HomeDashboard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? AppTheme.primaryPink.withValues(alpha: 0.15) : Colors.transparent,
+        color: isSelected ? AppTheme.primaryPink.withOpacity(0.15) : Colors.transparent,
         border: Border.all(
           color: isSelected ? AppTheme.primaryPink : AppTheme.borderSubtle,
         ),
@@ -268,7 +268,7 @@ class HomeDashboard extends StatelessWidget {
           height: 60,
           width: 60,
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.primaryPink.withValues(alpha: 0.15) : AppTheme.background.withValues(alpha: 0.5),
+            color: isSelected ? AppTheme.primaryPink.withOpacity(0.15) : AppTheme.background.withOpacity(0.5),
             borderRadius: BorderRadius.circular(16),
             border: isSelected ? Border.all(color: AppTheme.primaryPink, width: 2) : null,
           ),
@@ -330,7 +330,7 @@ class HomeDashboard extends StatelessWidget {
                 width: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isSelected ? AppTheme.primaryPink.withValues(alpha: 0.15) : AppTheme.background.withValues(alpha: 0.5),
+                  color: isSelected ? AppTheme.primaryPink.withOpacity(0.15) : AppTheme.background.withOpacity(0.5),
                   border: isSelected ? Border.all(color: AppTheme.primaryPink, width: 2) : null,
                 ),
                 child: Center(
@@ -394,7 +394,7 @@ class HomeDashboard extends StatelessWidget {
               width: 120,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [baseColor, baseColor.withValues(alpha: 0.4)],
+                  colors: [baseColor, baseColor.withOpacity(0.4)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),

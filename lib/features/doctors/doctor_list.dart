@@ -66,7 +66,7 @@ class DoctorList extends StatelessWidget {
             height: 50,
             width: 50,
             decoration: BoxDecoration(
-              color: AppTheme.primaryPink.withValues(alpha: 0.15),
+              color: AppTheme.primaryPink.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.medical_services, color: AppTheme.primaryPink),

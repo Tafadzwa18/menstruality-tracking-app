@@ -72,9 +72,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
           weekendTextStyle: const TextStyle(color: AppTheme.textMuted),
           outsideTextStyle: const TextStyle(color: Colors.white24),
           todayDecoration: BoxDecoration(
-            color: AppTheme.primaryPink.withValues(alpha: 0.2),
+            color: AppTheme.primaryPink.withOpacity(0.2),
             shape: BoxShape.circle,
-            border: Border.all(color: AppTheme.primaryPink.withValues(alpha: 0.5), width: 1),
+            border: Border.all(color: AppTheme.primaryPink.withOpacity(0.5), width: 1),
           ),
           selectedDecoration: const BoxDecoration(
             color: AppTheme.primaryPink,

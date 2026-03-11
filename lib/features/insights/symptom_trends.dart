@@ -64,7 +64,7 @@ class _SymptomTrendsState extends State<SymptomTrends> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryPink.withValues(alpha: 0.15),
+                    color: AppTheme.primaryPink.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Text('LAST 30 DAYS', style: TextStyle(color: AppTheme.primaryPink, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
@@ -147,7 +147,7 @@ class _SymptomTrendsState extends State<SymptomTrends> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPink.withValues(alpha: 0.15),
+                  color: AppTheme.primaryPink.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: AppTheme.primaryPink, size: 20),
@@ -174,7 +174,7 @@ class _SymptomTrendsState extends State<SymptomTrends> {
       decoration: BoxDecoration(
         color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.primaryPink.withValues(alpha: 0.1)),
+        border: Border.all(color: AppTheme.primaryPink.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +187,7 @@ class _SymptomTrendsState extends State<SymptomTrends> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.15),
+                      color: Colors.blue.withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, color: Colors.blue, size: 20),
@@ -224,7 +224,7 @@ class _SymptomTrendsState extends State<SymptomTrends> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.primaryPink.withValues(alpha: 0.05),
+              color: AppTheme.primaryPink.withOpacity(0.05),
               borderRadius: BorderRadius.circular(16),
             ),
             child: RichText(
@@ -255,8 +255,8 @@ class _SymptomTrendsState extends State<SymptomTrends> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.primaryPink.withValues(alpha: 0.05),
-        border: Border.all(color: AppTheme.primaryPink.withValues(alpha: 0.2)),
+        color: AppTheme.primaryPink.withOpacity(0.05),
+        border: Border.all(color: AppTheme.primaryPink.withOpacity(0.2)),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(

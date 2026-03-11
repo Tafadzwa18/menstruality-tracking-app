@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../core/models.dart';
@@ -87,7 +88,7 @@ class _ShareEmailScreenState extends State<ShareEmailScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: AppTheme.primaryPink.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: AppTheme.primaryPink.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                     child: const Icon(Icons.picture_as_pdf, color: AppTheme.primaryPink),
                   ),
                   const SizedBox(width: 16),
