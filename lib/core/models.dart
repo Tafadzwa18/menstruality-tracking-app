@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'sync_service.dart';
+import 'notification_service.dart';
 
 part 'models.g.dart';
 
@@ -145,8 +146,12 @@ class AppState extends ChangeNotifier {
 
   final _supabase = Supabase.instance.client;
   final _syncService = SyncService();
+  final NotificationService _notificationService = NotificationService();
 
   Future<void> init() async {
+    await _syncService.init();
+    await _notificationService.init();
+    
     // Initial check - set state silently
     final session = _supabase.auth.currentSession;
     _updateAuthState(session, notify: false);
@@ -156,10 +161,6 @@ class AppState extends ChangeNotifier {
       _updateAuthState(data.session);
     });
     
-    final prefs = await SharedPreferences.getInstance();
-    _cycleLength = prefs.getInt('cycleLength') ?? 28;
-    _periodLength = prefs.getInt('periodLength') ?? 5;
-    
     if (_isLoggedIn) {
       // Sync offline data in background
       _syncService.syncPendingData().catchError((e) {
@@ -168,6 +169,20 @@ class AppState extends ChangeNotifier {
     }
 
     _isInitialized = true;
+    _loadSettings();
+    notifyListeners();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+    _darkModeEnabled = prefs.getBool('dark_mode_enabled') ?? true;
+    _cycleLength = prefs.getInt('cycleLength') ?? 28;
+    _periodLength = prefs.getInt('periodLength') ?? 5;
+    
+    if (_notificationsEnabled) {
+      _scheduleAllReminders();
+    }
     notifyListeners();
   }
 
@@ -245,6 +260,7 @@ class AppState extends ChangeNotifier {
     _cycleLength = length;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('cycleLength', length);
+    if (_notificationsEnabled) _scheduleAllReminders();
     notifyListeners();
   }
 
@@ -252,6 +268,7 @@ class AppState extends ChangeNotifier {
     _periodLength = length;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('periodLength', length);
+    if (_notificationsEnabled) _scheduleAllReminders();
     notifyListeners();
   }
 
@@ -302,19 +319,48 @@ class AppState extends ChangeNotifier {
   }
 
   // Settings
-  bool _notificationsEnabled = true;
+  bool _notificationsEnabled = false;
   bool _darkModeEnabled = true;
 
   bool get notificationsEnabled => _notificationsEnabled;
   bool get darkModeEnabled => _darkModeEnabled;
 
-  void toggleNotifications(bool value) {
-    _notificationsEnabled = value;
+  Future<void> toggleNotifications(bool value) async {
+    if (value) {
+      final granted = await _notificationService.requestPermissions();
+      if (!granted) {
+        _notificationsEnabled = false;
+      } else {
+        _notificationsEnabled = true;
+        await _scheduleAllReminders();
+      }
+    } else {
+      _notificationsEnabled = false;
+      await _notificationService.cancelAllNotifications();
+    }
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', _notificationsEnabled);
     notifyListeners();
   }
 
-  void toggleDarkMode(bool value) {
+  Future<void> _scheduleAllReminders() async {
+    if (!_notificationsEnabled) return;
+    
+    await _notificationService.cancelAllNotifications();
+    await _notificationService.scheduleDailyLogReminder();
+    
+    // Calculate predicted date for period reminder (2 days before)
+    // For now, we use a simple prediction based on average cycle
+    final lastLogDate = logs.isNotEmpty ? logs.first.date : DateTime.now();
+    final predictedDate = lastLogDate.add(Duration(days: _cycleLength));
+    await _notificationService.schedulePeriodReminder(predictedDate);
+  }
+
+  void toggleDarkMode(bool value) async {
     _darkModeEnabled = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('dark_mode_enabled', _darkModeEnabled);
     notifyListeners();
   }
 

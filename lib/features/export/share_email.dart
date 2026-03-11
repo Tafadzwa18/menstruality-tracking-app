@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme.dart';
+import '../../core/models.dart';
 
 class ShareEmailScreen extends StatefulWidget {
   const ShareEmailScreen({Key? key}) : super(key: key);
@@ -9,12 +10,21 @@ class ShareEmailScreen extends StatefulWidget {
 }
 
 class _ShareEmailScreenState extends State<ShareEmailScreen> {
-  final _emailController = TextEditingController(text: 'sarah@example.com');
-  final _subjectController = TextEditingController(text: 'Health Report - Jane Doe (Sep-Nov)');
-  final _messageController = TextEditingController(
-    text: 'Dear Dr. Jenkins,\n\nPlease find attached my health and menstruality report for the last 3 cycles for our upcoming appointment.\n\nBest regards,\nJane Doe',
-  );
+  late TextEditingController _emailController;
+  late TextEditingController _subjectController;
+  late TextEditingController _messageController;
   bool _encryptReport = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final appState = context.read<AppState>();
+    _emailController = TextEditingController(text: 'doctor@care.com');
+    _subjectController = TextEditingController(text: 'Health Report - ${appState.userName}');
+    _messageController = TextEditingController(
+      text: 'Dear Doctor,\n\nPlease find attached my health and menstruality report generated from my tracking app.\n\nBest regards,\n${appState.userName}',
+    );
+  }
 
   @override
   void dispose() {
@@ -26,6 +36,7 @@ class _ShareEmailScreenState extends State<ShareEmailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -84,7 +95,7 @@ class _ShareEmailScreenState extends State<ShareEmailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Jane_Doe_Report_Sep-Nov.pdf', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        Text('${appState.userName.replaceAll(' ', '_')}_Health_Report.pdf', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
                         Text('1.2 MB', style: TextStyle(color: AppTheme.textMuted, fontSize: 12)),
                       ],
