@@ -25,7 +25,7 @@ class _AddDoctorFormState extends State<AddDoctorForm> {
     super.dispose();
   }
 
-  void _saveDoctor() {
+  Future<void> _saveDoctor() async {
     if (_nameController.text.isNotEmpty) {
       final newDoc = Doctor(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -34,8 +34,40 @@ class _AddDoctorFormState extends State<AddDoctorForm> {
         email: _emailController.text,
         phone: _phoneController.text,
       );
-      context.read<AppState>().addDoctor(newDoc);
-      Navigator.pop(context);
+      await context.read<AppState>().addDoctor(newDoc);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                SizedBox(width: 12),
+                Text('Doctor added successfully!', style: TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            backgroundColor: AppTheme.primaryPink,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 12),
+              Text('Please enter a doctor name'),
+            ],
+          ),
+          backgroundColor: AppTheme.phaseMenstrual,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      );
     }
   }
 

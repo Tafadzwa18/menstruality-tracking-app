@@ -24,7 +24,38 @@ class DoctorList extends StatelessWidget {
         ],
       ),
       body: doctors.isEmpty
-          ? const Center(child: Text('No doctors added yet.', style: TextStyle(color: Colors.white)))
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryPink.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.primaryPink.withOpacity(0.3), width: 2),
+                      ),
+                      child: const Icon(Icons.health_and_safety_outlined, color: AppTheme.primaryPink, size: 56),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Your Care Team is Empty',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Add your doctors and healthcare providers to keep track of your care contacts.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppTheme.textMuted, fontSize: 14, height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            )
           : ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               itemCount: doctors.length,

@@ -408,8 +408,8 @@ class AppState extends ChangeNotifier {
     return entries;
   }
 
-  void addDoctor(Doctor doc) {
-    // Note: Future feature to sync doctors specifically
+  Future<void> addDoctor(Doctor doc) async {
+    await _syncService.saveDoctor(doc);
     notifyListeners();
   }
 }

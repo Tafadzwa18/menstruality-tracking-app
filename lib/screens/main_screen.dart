@@ -57,7 +57,7 @@ class _MainScreenState extends State<MainScreen> {
       bottomNavigationBar: BottomAppBar(
         color: AppTheme.background,
         elevation: 10,
-        height: 70,
+        height: 80,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -80,7 +80,7 @@ class _MainScreenState extends State<MainScreen> {
         onTap: () => setState(() => _currentIndex = index),
         customBorder: const CircleBorder(),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,

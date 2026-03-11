@@ -75,8 +75,11 @@ class SyncService {
       final doc = _doctorBox.get(key);
       if (doc != null && !doc.isSynced) {
         try {
-          await _supabase.from('doctors').upsert(doc.toMap(user.id));
-          await _doctorBox.put(key, doc.copyWith(isSynced: true));
+          final user = _supabase.auth.currentUser;
+          if (user != null) {
+            await _supabase.from('doctors').upsert(doc.toMap(user.id));
+            await _doctorBox.put(key, doc.copyWith(isSynced: true));
+          }
         } catch (e) {
           print('Sync failed for doctor $key: $e');
         }
@@ -85,6 +88,26 @@ class SyncService {
 
     // Optionally fetch latest from cloud
     await fetchFromCloud();
+  }
+
+  Future<void> saveDoctor(Doctor doc) async {
+    // Save locally first
+    await _doctorBox.put(doc.id, doc.copyWith(isSynced: false));
+
+    // Try to sync if user is logged in
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      try {
+        await _supabase
+            .from('doctors')
+            .upsert(doc.toMap(user.id));
+        
+        // Mark as synced if successful
+        await _doctorBox.put(doc.id, doc.copyWith(isSynced: true));
+      } catch (e) {
+        print('Doctor sync failed: $e');
+      }
+    }
   }
 
   Future<void> fetchFromCloud() async {

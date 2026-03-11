@@ -54,7 +54,21 @@ class _DailyCheckinState extends State<DailyCheckin> {
     );
     context.read<AppState>().addLog(newLog);
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Log Saved!')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white, size: 20),
+            SizedBox(width: 12),
+            Text('Daily log saved!', style: TextStyle(fontWeight: FontWeight.w600)),
+          ],
+        ),
+        backgroundColor: AppTheme.primaryPink,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -225,17 +239,28 @@ class _DailyCheckinState extends State<DailyCheckin> {
     bool isSelected = _selectedMood == label;
     return GestureDetector(
       onTap: () => setState(() => _selectedMood = label),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
         width: 75,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: AppTheme.cardColor,
+          color: isSelected ? AppTheme.primaryPink.withOpacity(0.15) : AppTheme.cardColor,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected ? Border.all(color: AppTheme.primaryPink, width: 2) : null,
+          border: isSelected
+              ? Border.all(color: AppTheme.primaryPink, width: 2)
+              : Border.all(color: Colors.transparent, width: 2),
+          boxShadow: isSelected
+              ? [BoxShadow(color: AppTheme.primaryPink.withOpacity(0.25), blurRadius: 12, spreadRadius: 2)]
+              : null,
         ),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 28)),
+            AnimatedScale(
+              scale: isSelected ? 1.2 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: Text(emoji, style: const TextStyle(fontSize: 28)),
+            ),
             const SizedBox(height: 8),
             Text(
               label,
@@ -285,24 +310,39 @@ class _DailyCheckinState extends State<DailyCheckin> {
               }
             });
           },
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
             decoration: BoxDecoration(
-              color: AppTheme.cardColor,
+              color: isSelected ? AppTheme.primaryPink.withOpacity(0.15) : AppTheme.cardColor,
               borderRadius: BorderRadius.circular(24),
-              border: isSelected ? Border.all(color: AppTheme.primaryPink, width: 2) : null,
+              border: isSelected
+                  ? Border.all(color: AppTheme.primaryPink, width: 2)
+                  : Border.all(color: AppTheme.borderSubtle, width: 1),
+              boxShadow: isSelected
+                  ? [BoxShadow(color: AppTheme.primaryPink.withOpacity(0.25), blurRadius: 10, spreadRadius: 1)]
+                  : null,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  sym['icon'] as IconData,
-                  color: isSelected ? AppTheme.primaryPink : AppTheme.primaryPink,
-                  size: 28,
+                AnimatedScale(
+                  scale: isSelected ? 1.15 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    sym['icon'] as IconData,
+                    color: isSelected ? AppTheme.primaryPink : AppTheme.textMuted,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   label,
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: isSelected ? AppTheme.primaryPink : AppTheme.textMuted,
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  ),
                 )
               ],
             ),

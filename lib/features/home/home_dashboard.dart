@@ -4,9 +4,14 @@ import '../../core/theme.dart';
 import '../../core/models.dart';
 import '../../screens/calendar_screen.dart';
 
-class HomeDashboard extends StatelessWidget {
+class HomeDashboard extends StatefulWidget {
   const HomeDashboard({Key? key}) : super(key: key);
 
+  @override
+  State<HomeDashboard> createState() => _HomeDashboardState();
+}
+
+class _HomeDashboardState extends State<HomeDashboard> {
   String _getPhaseName(CyclePhase phase) {
     switch(phase) {
       case CyclePhase.menstrual: return 'MENSTRUAL PHASE';
@@ -49,7 +54,7 @@ class HomeDashboard extends StatelessWidget {
               _buildEnergyAndFocus(context, todayLog),
               const SizedBox(height: 24),
               _buildInsightCard(appState.currentPhase),
-              const SizedBox(height: 16), 
+              const SizedBox(height: 100), // Increased for FAB and Bottom Nav
             ],
           ),
         ),
@@ -140,11 +145,16 @@ class HomeDashboard extends StatelessWidget {
 
   Widget _buildFlowOption(String label, bool isSelected) {
     return Expanded(
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.primaryPink : Colors.transparent,
           borderRadius: BorderRadius.circular(30),
+          boxShadow: isSelected
+              ? [BoxShadow(color: AppTheme.primaryPink.withOpacity(0.3), blurRadius: 10, spreadRadius: 1)]
+              : null,
         ),
         child: Center(
           child: Text(
