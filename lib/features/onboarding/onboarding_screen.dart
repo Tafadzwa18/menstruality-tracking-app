@@ -31,59 +31,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
 
     try {
+      String successMessage = '';
+
       if (_isLogin) {
         await context.read<AppState>().login(
-              _emailController.text,
-              _passwordController.text,
-            );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login successful!'),
-              backgroundColor: AppTheme.primaryPink,
-            ),
-          );
-        }
+          _emailController.text,
+          _passwordController.text,
+        );
+        successMessage = 'Welcome back!';
       } else {
         await context.read<AppState>().register(
-              _nameController.text,
-              _emailController.text,
-              _passwordController.text,
-              _phoneController.text,
-            );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Account created successfully!'),
-              backgroundColor: AppTheme.primaryPink,
-            ),
-          );
-        }
+          _nameController.text,
+          _emailController.text,
+          _passwordController.text,
+          _phoneController.text,
+        );
+        successMessage = 'Account created successfully!';
       }
 
       if (mounted) {
+        // 1. Show the success snackbar FIRST
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(successMessage),
+            backgroundColor: AppTheme.primaryPink,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        // 2. Then navigate to the MainScreen
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       }
     } on AuthException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppTheme.phaseMenstrual,
-          ),
-        );
+      _showErrorSnackBar(e.message);
+    } on Exception catch (e) {
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('socketexception') ||
+          errorString.contains('connection failed')) {
+        _showErrorSnackBar('No internet connection detected.');
+      } else {
+        _showErrorSnackBar('An unexpected error occurred.');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('An unexpected error occurred: $e'),
-            backgroundColor: AppTheme.phaseMenstrual,
-          ),
-        );
-      }
+      _showErrorSnackBar('Something went wrong.');
     } finally {
       if (mounted) {
         setState(() {
@@ -91,6 +83,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         });
       }
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.warning, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppTheme
+            .phaseMenstrual, // Using your red/menstrual theme color for errors
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
 
   @override
@@ -107,9 +119,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(
-                    Icons.spa_outlined,
-                    size: 80,
+                  // const Icon(
+                  //   Icons.spa_outlined,
+                  //   size: 80,
+                  //   color: AppTheme.primaryPink,
+                  // ),
+                  Image.asset(
+                    'assets/images/Logo.png',
+                    height: 120,
+                    width: 80,
                     color: AppTheme.primaryPink,
                   ),
                   const SizedBox(height: 24),
@@ -139,7 +157,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       controller: _nameController,
                       label: 'Name',
                       icon: Icons.person_outline,
-                      validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Please enter your name'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
@@ -147,7 +167,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       label: 'Phone Number',
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
-                      validator: (value) => value == null || value.isEmpty ? 'Please enter your phone number' : null,
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'Please enter your phone number'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -156,7 +178,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     label: 'Email',
                     icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) => value == null || !value.contains('@') ? 'Please enter a valid email' : null,
+                    validator: (value) => value == null || !value.contains('@')
+                        ? 'Please enter a valid email'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
@@ -165,7 +189,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     icon: Icons.lock_outline,
                     obscureText: _obscurePassword,
                     suffixIcon: _buildVisibilityToggle(),
-                    validator: (value) => value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
+                    validator: (value) => value == null || value.length < 6
+                        ? 'Password must be at least 6 characters'
+                        : null,
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
@@ -228,7 +254,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _buildVisibilityToggle() {
     return IconButton(
       icon: Icon(
-        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+        _obscurePassword
+            ? Icons.visibility_off_outlined
+            : Icons.visibility_outlined,
         color: AppTheme.textMuted,
         size: 20,
       ),

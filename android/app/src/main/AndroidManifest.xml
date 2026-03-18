@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+       <!-- Required to access the internet from Flutter. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="menstruality_tracking_app"
+        android:label="HerRhythm"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
